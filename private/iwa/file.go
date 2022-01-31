@@ -3,17 +3,22 @@
 
 package iwa
 
+import (
+	"google.golang.org/protobuf/proto"
+)
+
 type File struct {
 	Contents []byte
-	Chunks   []CompressedChunk
+	Objects  []proto.Message
 }
 
-func (f File) Parse() {
+func (f File) Parse() []proto.Message {
 	contents := f.Contents
 
 	compressedChunk := CompressedChunk{Contents: contents}
-	var decodedChunk CompressedChunk
-	decodedChunk = compressedChunk.Parse()
+	objects := compressedChunk.Parse()
 
-	f.Chunks = append(f.Chunks, decodedChunk)
+	f.Objects = append(f.Objects, objects...)
+
+	return objects
 }

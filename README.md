@@ -8,4 +8,4 @@ This is a rough proof-of-concept right now.
 
 ## What doesn't work
 
-The export from Go to C for FFI is not right yet. It's probably close, but exporting a []byte from Go to C doesn't work. When the return type of the function is []byte, the function doesn't even correctly receive its input.
+The export works and attaching the function through FFI returns a JSON object that can be consumed. However, it does not contain all of the attributes that it does through the Python serializer. This seems like it is really close.

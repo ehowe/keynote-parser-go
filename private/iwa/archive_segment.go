@@ -9,10 +9,10 @@ import (
 
 type ArchiveSegment struct {
 	Data    []byte
-	Objects []interface{}
+	Objects []proto.Message
 }
 
-func (s ArchiveSegment) Parse() {
+func (s ArchiveSegment) Parse() []proto.Message {
 	archiveInfo, payload := s.GetArchiveInfoAndRemainder()
 
 	n := 0
@@ -27,6 +27,8 @@ func (s ArchiveSegment) Parse() {
 		s.Objects = append(s.Objects, payloadObj)
 		n += int(messageLength)
 	}
+
+	return s.Objects
 }
 
 func (s ArchiveSegment) GetArchiveInfoAndRemainder() (*kpb.ArchiveInfo, []byte) {

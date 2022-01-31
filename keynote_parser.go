@@ -12,9 +12,11 @@ import (
 	"io/ioutil"
 	"log"
 	"regexp"
+	"unsafe"
 
-	"fmt"
 	iwa "iwa"
+
+	"google.golang.org/protobuf/proto"
 )
 
 type UncompressedFile struct {
@@ -24,7 +26,7 @@ type UncompressedFile struct {
 
 type ExtractedFile struct {
 	Filename string
-	Contents iwa.File
+	Contents []proto.Message
 }
 
 type Keynote struct {
@@ -36,8 +38,7 @@ type Keynote struct {
 func main() {}
 
 //export parse
-func parse(p *C.char) []byte {
-	fmt.Println(C.GoString(p))
+func parse(p *C.char) unsafe.Pointer {
 	filePath := C.GoString(p)
 	keynoteFile := Keynote{
 		FilePath: filePath,
@@ -53,11 +54,11 @@ func parse(p *C.char) []byte {
 		if nameRegex.MatchString(uncompressedFile.Filename) {
 			file := iwa.File{Contents: uncompressedFile.Contents}
 
-			file.Parse()
+			objects := file.Parse()
 
 			extractedFile := ExtractedFile{
 				Filename: uncompressedFile.Filename,
-				Contents: file,
+				Contents: objects,
 			}
 
 			keynoteFile.ExtractedFiles = append(keynoteFile.ExtractedFiles, extractedFile)
@@ -70,7 +71,7 @@ func parse(p *C.char) []byte {
 		panic(err)
 	}
 
-	return jsonKeynote
+	return C.CBytes(jsonKeynote)
 }
 
 func (key *Keynote) Extract() {

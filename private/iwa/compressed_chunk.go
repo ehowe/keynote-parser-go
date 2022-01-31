@@ -5,14 +5,15 @@ import (
 	"errors"
 
 	"github.com/golang/snappy"
+	"google.golang.org/protobuf/proto"
 )
 
 type CompressedChunk struct {
-	Archives []ArchiveSegment
+	Objects  []proto.Message
 	Contents []byte
 }
 
-func (c CompressedChunk) Parse() CompressedChunk {
+func (c CompressedChunk) Parse() []proto.Message {
 	data := c.Contents
 	decoded := make([]byte, 0, len(data)+1)
 
@@ -45,9 +46,9 @@ func (c CompressedChunk) Parse() CompressedChunk {
 
 	archiveSegment := ArchiveSegment{Data: decoded}
 
-	archiveSegment.Parse()
+	objects := archiveSegment.Parse()
 
-	c.Archives = append(c.Archives, archiveSegment)
+	c.Objects = append(c.Objects, objects...)
 
-	return c
+	return c.Objects
 }
