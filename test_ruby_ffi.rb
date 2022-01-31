@@ -4,7 +4,11 @@ require "oj"
 module ExtractKeynote
   extend FFI::Library
 
-  ffi_lib File.expand_path("./libkeynoteparser.so")
+  if FFI::Platform::IS_MAC
+    ffi_lib File.expand_path("./libkeynoteparser.dylib")
+  else
+    ffi_lib File.expand_path("./libkeynoteparser.so")
+  end
 
   attach_function :_parse, :parse, [:string], :string
 
