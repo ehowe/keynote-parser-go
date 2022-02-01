@@ -8,7 +8,7 @@ This is a rough proof-of-concept right now.
 
 ## What doesn't work
 
-The export works and attaching the function through FFI returns a JSON object that can be consumed. However, it does not contain all of the attributes that it does through the Python serializer. This seems like it is really close.
+Some attributes fail to deserialize in Go due to not having the correct UTF-8 encoding. These seem to all be styling related so it's not a blocker at this time.
 
 ## Building
 
