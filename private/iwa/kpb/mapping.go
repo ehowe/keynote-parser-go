@@ -2,6 +2,8 @@ package kpb
 
 import (
 	"fmt"
+	"log"
+	"regexp"
 
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -366,14 +368,14 @@ var registryMap = map[uint32]string{
 	5017:  "TSCH.PreUFF.LegendNonStyleArchive",
 	5020:  "TSCH.ChartStylePreset",
 	5021:  "TSCH.ChartDrawableArchive",
-	5022:  "TSCH.TSCHChartStyleArchive",
-	5023:  "TSCH.TSCHChartNonStyleArchive",
-	5024:  "TSCH.TSCHLegendStyleArchive",
-	5025:  "TSCH.TSCHLegendNonStyleArchive",
-	5026:  "TSCH.TSCHChartAxisStyleArchive",
-	5027:  "TSCH.TSCHChartAxisNonStyleArchive",
-	5028:  "TSCH.TSCHChartSeriesStyleArchive",
-	5029:  "TSCH.TSCHChartSeriesNonStyleArchive",
+	5022:  "TSCH.TSCHCommonChartStyleArchive",
+	5023:  "TSCH.TSCHCommonChartNonStyleArchive",
+	5024:  "TSCH.TSCHCommonLegendStyleArchive",
+	5025:  "TSCH.TSCHCommonLegendNonStyleArchive",
+	5026:  "TSCH.TSCHCommonChartAxisStyleArchive",
+	5027:  "TSCH.TSCHCommonChartAxisNonStyleArchive",
+	5028:  "TSCH.Generated.ChartSeriesStyleArchive",
+	5029:  "TSCH.TSCHCommonChartSeriesNonStyleArchive",
 	5030:  "TSCH.TSCHCommonReferenceLineStyleArchive",
 	5031:  "TSCH.TSCHCommonReferenceLineNonStyleArchive",
 	5103:  "TSCH.CommandSetChartTypeArchive",
@@ -646,10 +648,16 @@ func GetProto(id uint32, messageBytes []byte) proto.Message {
 	jsonByteArray, err := protojson.Marshal(msg)
 
 	if err != nil {
+		regexp, _ := regexp.Compile("contains invalid UTF-8")
+		if regexp.MatchString(err.Error()) {
+			log.Println("Error deserializing utf-8 data for " + messageName + ". Skipping")
+			return msg
+		}
+
 		panic(err)
 	}
 
-	err = protojson.Unmarshal(jsonByteArray, jsonMsg)
+	_ = protojson.Unmarshal(jsonByteArray, jsonMsg)
 
 	return jsonMsg
 }

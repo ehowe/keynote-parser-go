@@ -29,7 +29,7 @@ func (c CompressedChunk) Parse() []proto.Message {
 		appended = append(appended, header[1:]...)
 		appended = append(appended, 0x00, 0x00, 0x00, 0x00, 0x00)
 
-		length := binary.LittleEndian.Uint64(appended)
+		length := binary.LittleEndian.Uint32(appended)
 
 		chunk := data[4 : 4+length]
 

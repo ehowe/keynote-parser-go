@@ -31,6 +31,7 @@ type ExtractedFile struct {
 
 type Keynote struct {
 	FilePath          string
+	OptionalIwa       string
 	UncompressedFiles []UncompressedFile
 	ExtractedFiles    []ExtractedFile
 }
@@ -74,6 +75,43 @@ func parse(p *C.char) unsafe.Pointer {
 	return C.CBytes(jsonKeynote)
 }
 
+//export parseSingleIwa
+func parseSingleIwa(p *C.char, i *C.char) unsafe.Pointer {
+	filePath := C.GoString(p)
+	iwaPath := C.GoString(i)
+	keynoteFile := Keynote{
+		FilePath:    filePath,
+		OptionalIwa: iwaPath,
+	}
+
+	keynoteFile.Extract()
+
+	nameRegex, _ := regexp.Compile(iwaPath)
+
+	for _, uncompressedFile := range keynoteFile.UncompressedFiles {
+		if nameRegex.MatchString(uncompressedFile.Filename) {
+			file := iwa.File{Contents: uncompressedFile.Contents}
+
+			objects := file.Parse()
+
+			extractedFile := ExtractedFile{
+				Filename: uncompressedFile.Filename,
+				Contents: objects,
+			}
+
+			keynoteFile.ExtractedFiles = append(keynoteFile.ExtractedFiles, extractedFile)
+		}
+	}
+
+	jsonKeynote, err := json.Marshal(keynoteFile)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return C.CBytes(jsonKeynote)
+}
+
 func (key *Keynote) Extract() {
 	file, err := ioutil.ReadFile(key.FilePath)
 
@@ -92,6 +130,10 @@ func (key *Keynote) Extract() {
 		unzippedFileBytes, err := readZipFile(zipFile)
 		if err != nil {
 			log.Println(err)
+			continue
+		}
+
+		if key.OptionalIwa != "" && key.OptionalIwa != zipFile.Name {
 			continue
 		}
 

@@ -13,28 +13,35 @@ type ArchiveSegment struct {
 }
 
 func (s ArchiveSegment) Parse() []proto.Message {
-	archiveInfo, payload := s.GetArchiveInfoAndRemainder()
+	buf := s.Data
 
-	n := 0
-	for _, messageInfo := range archiveInfo.MessageInfos {
-		messageType := *messageInfo.Type
-		messageLength := *messageInfo.Length
+	for len(buf) > 0 {
+		var archiveInfo *kpb.ArchiveInfo
+		archiveInfo, buf = s.GetArchiveInfoAndRemainder(buf)
 
-		messagePayload := payload[n : n+int(messageLength)]
+		for _, messageInfo := range archiveInfo.MessageInfos {
+			n := 0
+			messageType := *messageInfo.Type
+			messageLength := *messageInfo.Length
 
-		payloadObj := kpb.GetProto(messageType, messagePayload)
+			messagePayload := buf[n : n+int(messageLength)]
 
-		s.Objects = append(s.Objects, payloadObj)
-		n += int(messageLength)
+			payloadObj := kpb.GetProto(messageType, messagePayload)
+
+			s.Objects = append(s.Objects, payloadObj)
+			n += int(messageLength)
+
+			buf = buf[n:]
+		}
 	}
 
 	return s.Objects
 }
 
-func (s ArchiveSegment) GetArchiveInfoAndRemainder() (*kpb.ArchiveInfo, []byte) {
-	msgLen, newPos := protowire.ConsumeVarint(s.Data)
+func (s ArchiveSegment) GetArchiveInfoAndRemainder(buf []byte) (*kpb.ArchiveInfo, []byte) {
+	msgLen, newPos := protowire.ConsumeVarint(buf)
 	n := uint64(newPos)
-	msgBuf := s.Data[n : n+msgLen]
+	msgBuf := buf[n : n+msgLen]
 	info := &kpb.ArchiveInfo{}
 	err := proto.Unmarshal(msgBuf, info)
 
@@ -44,5 +51,5 @@ func (s ArchiveSegment) GetArchiveInfoAndRemainder() (*kpb.ArchiveInfo, []byte) 
 
 	n += msgLen
 
-	return info, s.Data[n:]
+	return info, buf[n:]
 }

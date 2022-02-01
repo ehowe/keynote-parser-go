@@ -57,7 +57,7 @@ fi
 ${SED} -i -E '/^(option )?go_package/d' definitions/*.proto
 ${SED} -i "2 a option go_package = './kpb';" definitions/*.proto
 
-rm -rf private/iwa/kpb
+rm -rf private/iwa/kpb/*.pb.go
 
 # Fix go namespace clashes
 replace_prefixes "TSA KN TSK" "DocumentArchive" "Archives"
